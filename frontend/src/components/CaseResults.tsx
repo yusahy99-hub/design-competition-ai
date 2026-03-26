@@ -17,36 +17,86 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
   const totalCount = aiRecommendations.length + dbResults.length;
 
   const handleDownload = () => {
-    const report = {
-      분석일시: new Date().toLocaleString('ko-KR'),
-      프로젝트_분석: {
-        프로젝트명: analysis.project_name || '',
-        유형: analysis.project_type || '',
-        위치: analysis.site_location || '',
-        규모: analysis.scale || '',
-        예산: analysis.budget || '',
-        키워드: analysis.design_keywords || [],
-        요구사항: analysis.key_requirements || [],
-      },
-      추천_사례: aiRecommendations.map((c: any) => ({
-        프로젝트명: c.title,
-        연도: c.year,
-        위치: c.location,
-        설계사무소: c.architect,
-        유사점: c.similarity,
-        설계전략: c.design_strategy,
-        건축특징: c.features,
-        유사도: `${c.relevance_score}%`,
-        네이버_검색: c.links?.naver_search || '',
-        이미지_검색: c.links?.naver_images || '',
-      })),
-    };
+    const date = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const casesHtml = aiRecommendations.map((c: any, i: number) => `
+      <div class="case">
+        <div class="case-header">
+          <h3>${i + 1}. ${c.title || ''}</h3>
+          <span class="score">${c.relevance_score || '-'}% 유사</span>
+        </div>
+        <table>
+          <tr><td class="label">연도</td><td>${c.year || '-'}</td><td class="label">위치</td><td>${c.location || '-'}</td></tr>
+          <tr><td class="label">설계사무소</td><td colspan="3">${c.architect || '-'}</td></tr>
+        </table>
+        <div class="detail"><strong>유사한 점:</strong> ${c.similarity || '-'}</div>
+        <div class="detail"><strong>설계 전략:</strong> ${c.design_strategy || '-'}</div>
+        <div class="detail"><strong>건축적 특징:</strong> ${c.features || '-'}</div>
+        <div class="links">
+          ${c.links ? `<a href="${c.links.naver_search}">네이버 검색</a> | <a href="${c.links.naver_images}">조감도/도면</a> | <a href="${c.links.google_search}">구글 검색</a> | <a href="${c.links.google_images}">구글 이미지</a>` : ''}
+        </div>
+      </div>`).join('\n');
 
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json;charset=utf-8' });
+    const keywords = (analysis.design_keywords || []).map((k: string) => `<span class="tag">${k}</span>`).join(' ');
+    const requirements = (analysis.key_requirements || []).map((r: string) => `<li>${r}</li>`).join('\n');
+
+    const html = `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>설계공모 사례 분석 - ${analysis.project_name || ''}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Noto Sans KR', sans-serif; color: #1a1a2e; padding: 40px; max-width: 900px; margin: 0 auto; background: #fff; }
+  h1 { font-size: 28px; color: #1a1a2e; border-bottom: 3px solid #4f46e5; padding-bottom: 12px; margin-bottom: 8px; }
+  .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 30px; }
+  h2 { font-size: 20px; color: #4f46e5; margin: 30px 0 15px; padding-left: 12px; border-left: 4px solid #4f46e5; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .info-item { padding: 10px 14px; background: #f8f9fa; border-radius: 8px; }
+  .info-item .label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; }
+  .info-item .value { font-size: 15px; font-weight: 600; margin-top: 2px; }
+  .tag { display: inline-block; padding: 4px 12px; background: #eef2ff; color: #4f46e5; border-radius: 20px; font-size: 13px; margin: 2px; }
+  .case { border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 16px; page-break-inside: avoid; }
+  .case-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .case-header h3 { font-size: 17px; color: #1a1a2e; }
+  .score { background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .case table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 14px; }
+  .case td { padding: 6px 10px; border-bottom: 1px solid #f3f4f6; }
+  .case td.label { color: #9ca3af; width: 100px; font-size: 12px; }
+  .detail { font-size: 14px; color: #374151; margin-bottom: 8px; line-height: 1.6; }
+  .detail strong { color: #4f46e5; }
+  .links { margin-top: 10px; font-size: 13px; }
+  .links a { color: #4f46e5; text-decoration: none; }
+  .links a:hover { text-decoration: underline; }
+  ul { padding-left: 20px; }
+  li { font-size: 14px; color: #374151; margin-bottom: 4px; line-height: 1.5; }
+  .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px; }
+  @media print { body { padding: 20px; } .case { break-inside: avoid; } }
+</style></head><body>
+  <h1>설계공모 유사 사례 분석 보고서</h1>
+  <p class="subtitle">${date} | Designed by YSH</p>
+
+  <h2>프로젝트 분석</h2>
+  <div class="info-grid">
+    <div class="info-item"><div class="label">프로젝트명</div><div class="value">${analysis.project_name || '-'}</div></div>
+    <div class="info-item"><div class="label">유형</div><div class="value">${analysis.project_type || '-'}</div></div>
+    <div class="info-item"><div class="label">위치</div><div class="value">${analysis.site_location || '-'}</div></div>
+    <div class="info-item"><div class="label">규모</div><div class="value">${analysis.scale || '-'}</div></div>
+    <div class="info-item"><div class="label">대지면적</div><div class="value">${analysis.site_area_sqm ? Number(analysis.site_area_sqm).toLocaleString() + ' m\u00B2' : '-'}</div></div>
+    <div class="info-item"><div class="label">예산</div><div class="value">${analysis.budget || '-'}</div></div>
+  </div>
+  <p style="margin-bottom:8px;font-size:13px;color:#6b7280;">설계 키워드</p>
+  <div style="margin-bottom:20px;">${keywords}</div>
+  ${requirements ? `<p style="margin-bottom:8px;font-size:13px;color:#6b7280;">핵심 요구사항</p><ul>${requirements}</ul>` : ''}
+
+  <h2>AI 추천 유사 사례 (${aiRecommendations.length}건)</h2>
+  ${casesHtml}
+
+  <div class="footer">설계공모 AI | Designed & Developed by YSH</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `설계공모_사례_${analysis.project_name || 'report'}.json`;
+    a.download = `설계공모_사례_${analysis.project_name || 'report'}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
