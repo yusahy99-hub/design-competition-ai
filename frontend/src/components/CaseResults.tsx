@@ -192,22 +192,22 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
                     {item.architect && <span>&#x1F3D7;&#xFE0F; {item.architect}</span>}
                   </div>
 
-                  {item.similarity && (
+                  {(item.selection_reason || item.similarity) && (
                     <div className="mb-3">
-                      <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">유사한 점</span>
-                      <p className="text-sm text-zinc-300 mt-1">{item.similarity}</p>
+                      <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">사례 선정 이유</span>
+                      <p className="text-sm text-zinc-300 mt-1">{item.selection_reason || item.similarity}</p>
                     </div>
                   )}
-                  {item.design_strategy && (
+                  {(item.winning_factor || item.design_strategy) && (
                     <div className="mb-3">
-                      <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">참고할 설계 전략</span>
-                      <p className="text-sm text-zinc-300 mt-1">{item.design_strategy}</p>
+                      <span className="text-xs font-medium text-rose-400 uppercase tracking-wider">당선 핵심 요인</span>
+                      <p className="text-sm text-zinc-300 mt-1">{item.winning_factor || item.design_strategy}</p>
                     </div>
                   )}
-                  {item.features && (
+                  {(item.applicable_insight || item.features) && (
                     <div>
-                      <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">건축적 특징</span>
-                      <p className="text-sm text-zinc-300 mt-1">{item.features}</p>
+                      <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">적용 가능한 인사이트</span>
+                      <p className="text-sm text-zinc-300 mt-1">{item.applicable_insight || item.features}</p>
                     </div>
                   )}
                 </div>

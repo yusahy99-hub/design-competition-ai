@@ -107,21 +107,27 @@ export default function CaseDetailModal({ item, onClose }: CaseDetailModalProps)
 
         {/* 상세 정보 */}
         <div style={{ padding: '24px' }} className="space-y-5">
-          {item.similarity && (
+          {(item.selection_reason || item.similarity) && (
             <div>
-              <h3 className="text-xs font-medium text-indigo-400 uppercase tracking-wider mb-2">유사한 점</h3>
-              <p className="text-zinc-300 leading-relaxed">{item.similarity}</p>
+              <h3 className="text-xs font-medium text-indigo-400 uppercase tracking-wider mb-2">사례 선정 이유</h3>
+              <p className="text-zinc-300 leading-relaxed">{item.selection_reason || item.similarity}</p>
             </div>
           )}
-          {item.design_strategy && (
+          {(item.winning_factor || item.design_strategy) && (
             <div>
-              <h3 className="text-xs font-medium text-purple-400 uppercase tracking-wider mb-2">참고할 설계 전략</h3>
-              <p className="text-zinc-300 leading-relaxed">{item.design_strategy}</p>
+              <h3 className="text-xs font-medium text-rose-400 uppercase tracking-wider mb-2">당선 핵심 요인</h3>
+              <p className="text-zinc-300 leading-relaxed">{item.winning_factor || item.design_strategy}</p>
+            </div>
+          )}
+          {(item.applicable_insight) && (
+            <div>
+              <h3 className="text-xs font-medium text-emerald-400 uppercase tracking-wider mb-2">적용 가능한 인사이트</h3>
+              <p className="text-zinc-300 leading-relaxed">{item.applicable_insight}</p>
             </div>
           )}
           {item.features && (
             <div>
-              <h3 className="text-xs font-medium text-emerald-400 uppercase tracking-wider mb-2">건축적 특징</h3>
+              <h3 className="text-xs font-medium text-purple-400 uppercase tracking-wider mb-2">건축적 특징</h3>
               <p className="text-zinc-300 leading-relaxed">{item.features}</p>
             </div>
           )}
