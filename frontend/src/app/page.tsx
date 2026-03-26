@@ -148,6 +148,13 @@ export default function Home() {
             <CaseResults cases={cases} analysis={analysis} onReset={handleReset} />
           )}
         </div>
+
+        {/* 푸터 */}
+        <footer className="text-center py-8 mt-12 border-t border-zinc-800/50">
+          <p className="text-zinc-600 text-sm">
+            Designed &amp; Developed by <span className="text-zinc-400 font-medium">YSH</span>
+          </p>
+        </footer>
       </div>
     </main>
   );
