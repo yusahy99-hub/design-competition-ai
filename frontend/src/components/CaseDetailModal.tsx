@@ -9,10 +9,10 @@ interface CaseDetailModalProps {
 
 export default function CaseDetailModal({ item, onClose }: CaseDetailModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4" onClick={onClose}>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
 
-      <div className="relative z-10 w-full max-w-3xl mx-4 my-10" onClick={(e) => e.stopPropagation()}>
+      <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="glass-card rounded-2xl overflow-hidden border border-zinc-700/50">
           {/* 헤더 */}
           <div className="p-6 border-b border-zinc-800 flex items-start justify-between">
