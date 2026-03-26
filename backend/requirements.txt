@@ -1,11 +1,12 @@
 fastapi==0.115.0
 uvicorn==0.30.6
 python-multipart==0.0.9
-anthropic==0.39.0
+groq==1.1.2
 pdfplumber==0.11.4
 aiohttp==3.10.5
 beautifulsoup4==4.12.3
 sqlalchemy==2.0.35
 aiosqlite==0.20.0
+greenlet==3.3.2
 pydantic==2.9.2
 python-dotenv==1.0.1
