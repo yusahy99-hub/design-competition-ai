@@ -147,6 +147,28 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
           <div className="space-y-5">
             {aiRecommendations.map((item: any, i: number) => (
               <div key={i} className="glass-card rounded-2xl overflow-hidden transition-all duration-300">
+                <div className="flex flex-col lg:flex-row">
+                  {/* 왼쪽 이미지 */}
+                  {item.images && item.images.length > 0 ? (
+                    <div className="lg:w-72 flex-shrink-0 p-4 cursor-pointer" onClick={() => setSelectedCase(item)}>
+                      <img src={item.images[0]} alt={item.title}
+                        className="w-full h-48 lg:h-full object-cover rounded-xl hover:scale-[1.02] transition-transform"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="lg:w-48 flex-shrink-0 p-4 cursor-pointer" onClick={() => setSelectedCase(item)}>
+                      <div className="w-full h-full min-h-[160px] rounded-xl bg-zinc-800/50 flex items-center justify-center">
+                        <svg className="w-14 h-14 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 오른쪽 정보 */}
+                  <div className="flex-1">
                 <div className="p-6 cursor-pointer hover:bg-zinc-800/20 transition-colors"
                   onClick={() => setSelectedCase(item)}>
                   {/* 상단 */}
@@ -221,6 +243,8 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
                     </a>
                   </div>
                 )}
+                  </div>{/* flex-1 끝 */}
+                </div>{/* flex row 끝 */}
               </div>
             ))}
           </div>
