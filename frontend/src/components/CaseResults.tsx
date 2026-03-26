@@ -186,10 +186,11 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
                   </div>
 
                   {/* 메타 정보 */}
-                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-zinc-400 mb-4">
-                    {item.year && <span>&#x1F4C5; {item.year}년</span>}
-                    {item.location && <span>&#x1F4CD; {item.location}</span>}
-                    {item.architect && <span>&#x1F3D7;&#xFE0F; {item.architect}</span>}
+                  <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-zinc-400 mb-4">
+                    {item.year && <span>{item.year}년</span>}
+                    {item.location && <span>{item.location}</span>}
+                    {item.architect && <span>{item.architect}</span>}
+                    {item.scale_info && <span className="text-zinc-500">{item.scale_info}</span>}
                   </div>
 
                   {(item.selection_reason || item.similarity) && (
