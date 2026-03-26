@@ -48,55 +48,52 @@ class CaseSearcher:
         }
 
     async def _fetch_images_kakao(self, ai_results: list) -> list:
-        """카카오 이미지 검색 API로 조감도/외관 이미지 가져오기"""
+        """카카오 이미지 검색 API로 조감도/투시도 이미지 가져오기"""
         headers = {"Authorization": f"KakaoAK {self.kakao_key}"}
 
         async with aiohttp.ClientSession() as session:
-            tasks = []
-            for item in ai_results:
+            for i, item in enumerate(ai_results):
                 title = item.get("title", "")
                 architect = item.get("architect", "")
-                query = f"{title} {architect} 건축 조감도"
-                tasks.append(self._kakao_image_search(session, headers, query))
 
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+                # 여러 검색어 조합으로 시도 — 조감도/투시도 우선
+                queries = [
+                    f"{title} 설계공모 당선 투시도",
+                    f"{title} 설계공모 당선 조감도",
+                    f"{title} 당선작 건축",
+                    f"{title} {architect} 설계",
+                ]
 
-            for i, images in enumerate(results):
-                if isinstance(images, list) and images:
-                    ai_results[i]["images"] = images
-                else:
-                    # 프로젝트명만으로 재시도
-                    ai_results[i]["images"] = []
+                best_images = []
+                for query in queries:
+                    images = await self._kakao_image_search(session, headers, query)
+                    if images:
+                        best_images = images
+                        break
 
-            # 이미지 못 찾은 사례는 더 넓은 검색어로 재시도
-            retry_tasks = []
-            retry_indices = []
-            for i, item in enumerate(ai_results):
-                if not item.get("images"):
-                    title = item.get("title", "")
-                    retry_tasks.append(self._kakao_image_search(session, headers, f"{title} 건축"))
-                    retry_indices.append(i)
-
-            if retry_tasks:
-                retry_results = await asyncio.gather(*retry_tasks, return_exceptions=True)
-                for j, images in enumerate(retry_results):
-                    idx = retry_indices[j]
-                    if isinstance(images, list) and images:
-                        ai_results[idx]["images"] = images
+                ai_results[i]["images"] = best_images
 
         return ai_results
 
     async def _kakao_image_search(self, session: aiohttp.ClientSession, headers: dict, query: str) -> list:
-        """카카오 Daum 이미지 검색"""
+        """카카오 Daum 이미지 검색 — 큰 이미지만 필터링"""
         url = "https://dapi.kakao.com/v2/search/image"
-        params = {"query": query, "size": 5, "sort": "accuracy"}
+        params = {"query": query, "size": 10, "sort": "accuracy"}
 
         try:
             async with session.get(url, headers=headers, params=params, timeout=aiohttp.ClientTimeout(total=8)) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     documents = data.get("documents", [])
-                    return [doc["image_url"] for doc in documents if doc.get("image_url")]
+                    # 너비 400px 이상의 이미지만 (조감도/투시도는 보통 큼)
+                    filtered = []
+                    for doc in documents:
+                        img_url = doc.get("image_url", "")
+                        width = doc.get("width", 0)
+                        height = doc.get("height", 0)
+                        if img_url and width >= 400 and height >= 250:
+                            filtered.append(img_url)
+                    return filtered[:3]
         except Exception as e:
             print(f"카카오 이미지 검색 오류: {e}")
 
