@@ -52,46 +52,60 @@ class CaseSearcher:
         headers = {"Authorization": f"KakaoAK {self.kakao_key}"}
 
         async with aiohttp.ClientSession() as session:
-            for i, item in enumerate(ai_results):
-                title = item.get("title", "")
-                architect = item.get("architect", "")
+            # 모든 사례를 동시에 검색 (속도 향상)
+            tasks = []
+            for item in ai_results:
+                tasks.append(self._find_best_image(session, headers, item))
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
-                # 여러 검색어 조합으로 시도 — 조감도/투시도 우선
-                queries = [
-                    f"{title} 설계공모 당선 투시도",
-                    f"{title} 설계공모 당선 조감도",
-                    f"{title} 당선작 건축",
-                    f"{title} {architect} 설계",
-                ]
-
-                best_images = []
-                for query in queries:
-                    images = await self._kakao_image_search(session, headers, query)
-                    if images:
-                        best_images = images
-                        break
-
-                ai_results[i]["images"] = best_images
+            for i, images in enumerate(results):
+                ai_results[i]["images"] = images if isinstance(images, list) else []
 
         return ai_results
 
+    async def _find_best_image(self, session, headers, item) -> list:
+        """사례 하나에 대해 여러 검색어로 이미지를 찾음"""
+        title = item.get("title", "")
+        architect = item.get("architect", "")
+        project_type = item.get("features", "")
+
+        # 프로젝트명에서 핵심 단어 추출 (짧게)
+        short_title = title.replace("건립공사", "").replace("건립사업", "").replace("건립", "").replace("설계공모", "").strip()
+
+        # 구체적 → 일반적 순서로 시도
+        queries = [
+            f"{short_title} 설계공모 당선작",
+            f"{short_title} 설계공모 조감도",
+            f"{short_title} 당선 건축",
+            f"{short_title} 건축",
+            f"{title}",
+            f"{short_title} {architect}",
+        ]
+
+        for query in queries:
+            images = await self._kakao_image_search(session, headers, query)
+            if images:
+                return images
+
+        return []
+
     async def _kakao_image_search(self, session: aiohttp.ClientSession, headers: dict, query: str) -> list:
-        """카카오 Daum 이미지 검색 — 큰 이미지만 필터링"""
+        """카카오 Daum 이미지 검색 — 큰 이미지만"""
         url = "https://dapi.kakao.com/v2/search/image"
-        params = {"query": query, "size": 10, "sort": "accuracy"}
+        params = {"query": query, "size": 15, "sort": "accuracy"}
 
         try:
             async with session.get(url, headers=headers, params=params, timeout=aiohttp.ClientTimeout(total=8)) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     documents = data.get("documents", [])
-                    # 너비 400px 이상의 이미지만 (조감도/투시도는 보통 큼)
                     filtered = []
                     for doc in documents:
                         img_url = doc.get("image_url", "")
                         width = doc.get("width", 0)
                         height = doc.get("height", 0)
-                        if img_url and width >= 400 and height >= 250:
+                        # 최소 크기: 너비 300px 이상 (너무 빡빡하면 못 찾음)
+                        if img_url and width >= 300 and height >= 200:
                             filtered.append(img_url)
                     return filtered[:3]
         except Exception as e:
