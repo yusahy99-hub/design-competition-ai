@@ -4,6 +4,7 @@ import { useState } from 'react';
 import FileUpload from '@/components/FileUpload';
 import AnalysisResult from '@/components/AnalysisResult';
 import CaseResults from '@/components/CaseResults';
+import { getApiUrl } from '@/lib/api';
 
 type Step = 'upload' | 'analyzing' | 'analyzed' | 'searching' | 'results';
 
@@ -22,7 +23,7 @@ export default function Home() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+      const res = await fetch(getApiUrl('/api/analyze'), { method: 'POST', body: formData });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.detail || '분석 실패');
@@ -43,7 +44,7 @@ export default function Home() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/search/${analysisId}`, { method: 'POST' });
+      const res = await fetch(getApiUrl(`/api/search/${analysisId}`), { method: 'POST' });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.detail || '검색 실패');
