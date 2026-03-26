@@ -183,3 +183,59 @@ async def search_images(req: ImageSearchRequest):
                 pass
 
     return {"images": all_images[:12]}
+
+
+class DownloadRequest(BaseModel):
+    analysis: dict
+    cases: dict
+
+
+@router.post("/download")
+async def download_report(req: DownloadRequest):
+    """검색 결과를 다운로드용 JSON으로 반환"""
+    from fastapi.responses import JSONResponse
+
+    analysis = req.analysis
+    ai_recs = req.cases.get("ai_recommendations", [])
+    web_results = req.cases.get("web_results", [])
+
+    report = {
+        "프로젝트_분석": {
+            "프로젝트명": analysis.get("project_name", ""),
+            "유형": analysis.get("project_type", ""),
+            "위치": analysis.get("site_location", ""),
+            "규모": analysis.get("scale", ""),
+            "예산": analysis.get("budget", ""),
+            "키워드": analysis.get("design_keywords", []),
+            "요구사항": analysis.get("key_requirements", []),
+        },
+        "AI_추천_사례": [
+            {
+                "프로젝트명": c.get("title", ""),
+                "연도": c.get("year", ""),
+                "위치": c.get("location", ""),
+                "설계사무소": c.get("architect", ""),
+                "유사점": c.get("similarity", ""),
+                "설계전략": c.get("design_strategy", ""),
+                "건축특징": c.get("features", ""),
+                "유사도": c.get("relevance_score", ""),
+                "출처": c.get("source_url", ""),
+            }
+            for c in ai_recs
+        ],
+        "웹_검색_결과": [
+            {
+                "제목": w.get("title", ""),
+                "URL": w.get("url", ""),
+                "설명": w.get("description", ""),
+            }
+            for w in web_results
+        ],
+    }
+
+    return JSONResponse(
+        content=report,
+        headers={
+            "Content-Disposition": f'attachment; filename="design_competition_report.json"'
+        },
+    )

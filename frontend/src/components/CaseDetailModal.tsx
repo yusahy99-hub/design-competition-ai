@@ -159,6 +159,19 @@ export default function CaseDetailModal({ item, onClose }: CaseDetailModalProps)
                 <p className="text-zinc-300 leading-relaxed">{item.features}</p>
               </div>
             )}
+
+            {/* 출처 링크 */}
+            {item.source_url && (
+              <div className="pt-4 border-t border-zinc-800">
+                <a href={item.source_url} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/25 transition-colors border border-indigo-500/20">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  출처 페이지로 이동
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

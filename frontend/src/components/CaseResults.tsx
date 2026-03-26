@@ -13,10 +13,31 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
   const aiRecommendations = cases.ai_recommendations || [];
   const webResults = cases.web_results || [];
   const dbResults = cases.db_results || [];
-  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [selectedCase, setSelectedCase] = useState<any>(null);
 
   const totalCount = aiRecommendations.length + webResults.length + dbResults.length;
+
+  const handleDownload = async () => {
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysis, cases }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `설계공모_사례_${analysis.project_name || 'report'}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error('다운로드 실패:', e);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-10">
@@ -26,7 +47,7 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
       )}
 
       {/* 상단 요약 */}
-      <div className="glass-card rounded-2xl p-6 flex items-center justify-between">
+      <div className="glass-card rounded-2xl p-6 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white">검색 결과</h2>
           <p className="text-zinc-400 mt-1">
@@ -34,10 +55,19 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
             관련 유사 사례 {totalCount}건
           </p>
         </div>
-        <button onClick={onReset}
-          className="px-5 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-all">
-          새로 검색
-        </button>
+        <div className="flex gap-3">
+          <button onClick={handleDownload}
+            className="px-5 py-2.5 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            다운로드
+          </button>
+          <button onClick={onReset}
+            className="px-5 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-all">
+            새로 검색
+          </button>
+        </div>
       </div>
 
       {/* AI 추천 사례 */}
@@ -55,10 +85,8 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
 
           <div className="space-y-5">
             {aiRecommendations.map((item: any, i: number) => (
-              <div key={i} className="glass-card rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer hover:border-indigo-500/40"
-                style={{ animationDelay: `${i * 0.1}s` }}
-                onClick={() => setSelectedCase(item)}>
-                <div className="flex flex-col lg:flex-row">
+              <div key={i} className="glass-card rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer hover:border-indigo-500/40">
+                <div className="flex flex-col lg:flex-row" onClick={() => setSelectedCase(item)}>
                   {/* 이미지 영역 */}
                   {item.images && item.images.length > 0 ? (
                     <div className="lg:w-80 flex-shrink-0 p-4">
@@ -68,8 +96,7 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
                             item.images.length === 1 ? 'col-span-2' : j === 0 && item.images.length === 3 ? 'col-span-2' : ''
                           }`}>
                             <img src={img} alt={`${item.title} ${j + 1}`}
-                              className="w-full h-32 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                              onClick={() => setLightboxImg(img)}
+                              className="w-full h-32 object-cover hover:scale-105 transition-transform duration-300"
                               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                             />
                           </div>
@@ -130,6 +157,20 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
                     )}
                   </div>
                 </div>
+
+                {/* 출처 링크 */}
+                {item.source_url && (
+                  <div className="px-6 pb-4 pt-0">
+                    <a href={item.source_url} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/10 text-indigo-400 text-sm hover:bg-indigo-500/20 transition-colors"
+                      onClick={(e) => e.stopPropagation()}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      출처 보기
+                    </a>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -225,7 +266,7 @@ export default function CaseResults({ cases, analysis, onReset }: CaseResultsPro
         </div>
       )}
 
-      {/* 하단 새 검색 */}
+      {/* 하단 */}
       <div className="text-center pt-4 pb-8">
         <button onClick={onReset}
           className="px-8 py-3 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-all">
